@@ -1,0 +1,6 @@
+<library path="lib/libline_rot_slam">
+  <class name="line_rot_slam/PcdProcessNodelet"
+    type="PCD_PROCESS::PcdProcessNodelet"
+    base_class_type="nodelet::Nodelet">
+  </class>
+</library>
