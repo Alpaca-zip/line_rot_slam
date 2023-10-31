@@ -32,9 +32,9 @@ TwistKeyboardControl::TwistKeyboardControl() : pnh_("~")
   std::cout << "\033[32m **START MOVING**\033[0m" << std::endl;
 }
 
-void TwistKeyboardControl::optimizationEndCallback(const std_msgs::Bool& msg)
+void TwistKeyboardControl::optimizationEndCallback(const std_msgs::Bool& flag_msg)
 {
-  if (!msg.data)
+  if (!flag_msg.data)
   {
     return;
   }

@@ -46,7 +46,7 @@ private:
 
 public:
   TwistKeyboardControl();
-  void optimizationEndCallback(const std_msgs::Bool& msg);
+  void optimizationEndCallback(const std_msgs::Bool& flag_msg);
   void controlLoop();
   void displayInstructions();
   int getch();
