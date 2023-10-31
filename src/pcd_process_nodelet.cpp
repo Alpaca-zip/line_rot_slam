@@ -21,14 +21,15 @@ namespace PCD_PROCESS
 void PcdProcessNodelet::onInit()
 {
   pnh_ = getPrivateNodeHandle();
-  pnh_.param<std::string>("points_topic", points_topic_, "points_in");
+  pnh_.param<std::string>("input_points_topic", points_in_, "points_in");
+  pnh_.param<std::string>("output_points_topic", points_out_, "points_out");
   pnh_.param<bool>("publish_image", publish_image_, false);
   pnh_.param<float>("resolution", resolution_, 1.0f);
   pnh_.param<float>("vfov", vfov_, 30.0f);
   pnh_.param<float>("hfov", hfov_, 360.0f);
 
-  pointcloud_sub_ = nh_.subscribe(points_topic_, 1, &PcdProcessNodelet::pointcloudCallback, this);
-  pointcloud_pub_ = nh_.advertise<sensor_msgs::PointCloud2>("points_out", 1);
+  pointcloud_sub_ = nh_.subscribe(points_in_, 1, &PcdProcessNodelet::pointcloudCallback, this);
+  pointcloud_pub_ = nh_.advertise<sensor_msgs::PointCloud2>(points_out_, 1);
   image_x_pub_ = nh_.advertise<sensor_msgs::Image>("image/point_x", 1);
   image_y_pub_ = nh_.advertise<sensor_msgs::Image>("image/point_y", 1);
   image_z_pub_ = nh_.advertise<sensor_msgs::Image>("image/point_z", 1);

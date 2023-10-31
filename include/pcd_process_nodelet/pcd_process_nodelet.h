@@ -44,7 +44,8 @@ private:
   sensor_msgs::ImagePtr image_z_msg_;
   sensor_msgs::ImagePtr image_intensity_msg_;
   pcl::PointCloud<pcl::PointXYZI>::Ptr pcl_cloud_;
-  std::string points_topic_;
+  std::string points_in_;
+  std::string points_out_;
   cv::Mat cloud_mat_;
   bool publish_image_;
   float resolution_;
