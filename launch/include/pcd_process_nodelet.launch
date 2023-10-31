@@ -3,7 +3,7 @@
   <arg name="use_nodelet" default="true"/>
   <arg name="manager_name" default="nodelet_manager"/>
   <arg name="input_points_topic" default="velodyne_points"/>
-  <arg name="output_points_topic" default="velodyne_points"/>
+  <arg name="output_points_topic" default="processed_points"/>
   <arg name="publish_image" default="false"/>
   <arg name="resolution" default="1.0"/>
   <arg name="vfov" default="30.0"/>
