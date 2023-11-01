@@ -27,6 +27,7 @@ void MapOptimizationNodelet::onInit()
   pointcloud_sub_ = nh_.subscribe(points_in_, 1, &MapOptimizationNodelet::pointcloudCallback, this);
   timer_ = nh_.createTimer(ros::Duration(0.1), &MapOptimizationNodelet::broadcastMapFrame, this);
   map_pub_ = nh_.advertise<sensor_msgs::PointCloud2>("map", 1);
+  prev_transform_ = Eigen::Affine3d::Identity();
   optimization_flag_ = false;
 
   map_cloud_.reset(new pcl::PointCloud<pcl::PointXYZI>);
@@ -97,7 +98,10 @@ void MapOptimizationNodelet::execute(const line_rot_slam::OptimizationGoalConstP
 void MapOptimizationNodelet::transformCloud()
 {
   geometry_msgs::TransformStamped transform_stamped;
+  Eigen::Affine3d current_transform;
+  Eigen::Affine3d incremental_transform;
   pcl::PointCloud<pcl::PointXYZI>::Ptr transformed_cloud(new pcl::PointCloud<pcl::PointXYZI>);
+  sensor_msgs::PointCloud2Ptr transformed_cloud_msg(new sensor_msgs::PointCloud2);
 
   for (int i = 0; i < cloud_vector_.size(); i++)
   {
@@ -116,11 +120,14 @@ void MapOptimizationNodelet::transformCloud()
         continue;
       }
 
-      Eigen::Affine3d transform = tf2::transformToEigen(transform_stamped);
-      pcl::transformPointCloud(*cloud, *transformed_cloud, transform);
+      current_transform = tf2::transformToEigen(transform_stamped);
+      incremental_transform = prev_transform_.inverse() * current_transform;
+      pcl::transformPointCloud(*cloud, *transformed_cloud, prev_transform_ * incremental_transform);
 
       *map_cloud_ += *transformed_cloud;
       transformed_cloud->clear();
+
+      prev_transform_ = current_transform;
     }
     else
     {
@@ -128,7 +135,6 @@ void MapOptimizationNodelet::transformCloud()
     }
   }
 
-  sensor_msgs::PointCloud2Ptr transformed_cloud_msg(new sensor_msgs::PointCloud2);
   pcl::toROSMsg(*map_cloud_, *transformed_cloud_msg);
   transformed_cloud_msg->header.frame_id = "map";
   transformed_cloud_msg->header.stamp = ros::Time::now();

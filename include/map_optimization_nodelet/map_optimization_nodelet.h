@@ -46,6 +46,7 @@ private:
   std::string odom_frame_;
   std::vector<pcl::PointCloud<pcl::PointXYZI>::Ptr> cloud_vector_;
   pcl::PointCloud<pcl::PointXYZI>::Ptr map_cloud_;
+  Eigen::Affine3d prev_transform_;
   boost::shared_ptr<tf2_ros::Buffer> tf_buffer_;
   boost::shared_ptr<tf2_ros::TransformListener> tf_listener_;
   boost::shared_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
