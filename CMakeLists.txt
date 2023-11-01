@@ -10,12 +10,24 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   geometry_msgs
   sensor_msgs
+  actionlib
+  actionlib_msgs
   cv_bridge
   pcl_ros
 )
 
 find_package(OpenCV REQUIRED)
 find_package(PCL REQUIRED)
+
+add_action_files(
+  FILES
+  Optimization.action
+)
+
+generate_messages(
+  DEPENDENCIES
+  actionlib_msgs
+)
 
 catkin_package(
   CATKIN_DEPENDS
@@ -25,6 +37,8 @@ catkin_package(
     std_msgs
     geometry_msgs
     sensor_msgs
+    actionlib
+    actionlib_msgs
     cv_bridge
     pcl_ros
 )
@@ -38,6 +52,7 @@ include_directories(
 
 add_library(${PROJECT_NAME}
   src/pcd_process_nodelet.cpp
+  src/map_optimization_nodelet.cpp
 )
 
 target_link_libraries(${PROJECT_NAME}
@@ -45,7 +60,6 @@ target_link_libraries(${PROJECT_NAME}
   ${PCL_LIBRARIES}
   ${OpenCV_LIBRARIES}
 )
-
 
 add_executable(twist_keyboard_control_node src/twist_keyboard_control.cpp)
 target_link_libraries(twist_keyboard_control_node ${catkin_LIBRARIES})
