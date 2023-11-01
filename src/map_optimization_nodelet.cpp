@@ -30,7 +30,6 @@ void MapOptimizationNodelet::onInit()
   prev_transform_ = Eigen::Affine3d::Identity();
   optimization_flag_ = false;
 
-  map_cloud_.reset(new pcl::PointCloud<pcl::PointXYZI>);
   tf_buffer_.reset(new tf2_ros::Buffer(ros::Duration(2.0), true));
   tf_listener_.reset(new tf2_ros::TransformListener(*tf_buffer_));
   tf_broadcaster_.reset(new tf2_ros::TransformBroadcaster);
@@ -88,6 +87,8 @@ void MapOptimizationNodelet::execute(const line_rot_slam::OptimizationGoalConstP
   }
   */
 
+  publishMapCloud();
+
   result.success = true;
   server_->setSucceeded(result);
   cloud_vector_.clear();
@@ -100,12 +101,11 @@ void MapOptimizationNodelet::transformCloud()
   geometry_msgs::TransformStamped transform_stamped;
   Eigen::Affine3d current_transform;
   Eigen::Affine3d incremental_transform;
-  pcl::PointCloud<pcl::PointXYZI>::Ptr transformed_cloud(new pcl::PointCloud<pcl::PointXYZI>);
-  sensor_msgs::PointCloud2Ptr transformed_cloud_msg(new sensor_msgs::PointCloud2);
 
   for (int i = 0; i < cloud_vector_.size(); i++)
   {
     pcl::PointCloud<pcl::PointXYZI>::Ptr cloud = cloud_vector_[i];
+    pcl::PointCloud<pcl::PointXYZI>::Ptr transformed_cloud(new pcl::PointCloud<pcl::PointXYZI>);
 
     if (tf_buffer_->canTransform(odom_frame_, cloud->header.frame_id, pcl_conversions::fromPCL(cloud->header).stamp))
     {
@@ -124,8 +124,8 @@ void MapOptimizationNodelet::transformCloud()
       incremental_transform = prev_transform_.inverse() * current_transform;
       pcl::transformPointCloud(*cloud, *transformed_cloud, prev_transform_ * incremental_transform);
 
-      *map_cloud_ += *transformed_cloud;
-      transformed_cloud->clear();
+      transformed_cloud_vector_.push_back(transformed_cloud);
+      transform_vector_.push_back(prev_transform_ * incremental_transform);
 
       prev_transform_ = current_transform;
     }
@@ -134,8 +134,19 @@ void MapOptimizationNodelet::transformCloud()
       ROS_DEBUG("No transform available from %s to %s", cloud->header.frame_id.c_str(), odom_frame_.c_str());
     }
   }
+}
 
-  pcl::toROSMsg(*map_cloud_, *transformed_cloud_msg);
+void MapOptimizationNodelet::publishMapCloud()
+{
+  sensor_msgs::PointCloud2Ptr transformed_cloud_msg(new sensor_msgs::PointCloud2);
+  pcl::PointCloud<pcl::PointXYZI>::Ptr map_cloud(new pcl::PointCloud<pcl::PointXYZI>);
+
+  for (const pcl::PointCloud<pcl::PointXYZI>::Ptr& cloud : transformed_cloud_vector_)
+  {
+    *map_cloud += *cloud;
+  }
+
+  pcl::toROSMsg(*map_cloud, *transformed_cloud_msg);
   transformed_cloud_msg->header.frame_id = "map";
   transformed_cloud_msg->header.stamp = ros::Time::now();
 

@@ -45,7 +45,8 @@ private:
   std::string points_in_;
   std::string odom_frame_;
   std::vector<pcl::PointCloud<pcl::PointXYZI>::Ptr> cloud_vector_;
-  pcl::PointCloud<pcl::PointXYZI>::Ptr map_cloud_;
+  std::vector<pcl::PointCloud<pcl::PointXYZI>::Ptr> transformed_cloud_vector_;
+  std::vector<Eigen::Affine3d> transform_vector_;
   Eigen::Affine3d prev_transform_;
   boost::shared_ptr<tf2_ros::Buffer> tf_buffer_;
   boost::shared_ptr<tf2_ros::TransformListener> tf_listener_;
@@ -59,6 +60,7 @@ public:
   void pointcloudCallback(const sensor_msgs::PointCloud2ConstPtr& cloud_msg);
   void execute(const line_rot_slam::OptimizationGoalConstPtr& goal);
   void transformCloud();
+  void publishMapCloud();
 };
 
 }  // namespace OPTIMIZATION
