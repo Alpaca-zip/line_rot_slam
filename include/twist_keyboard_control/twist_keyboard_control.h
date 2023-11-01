@@ -19,34 +19,28 @@
 #include <ros/ros.h>
 #include <std_msgs/Bool.h>
 #include <geometry_msgs/Twist.h>
+#include <actionlib/client/simple_action_client.h>
+#include <line_rot_slam/OptimizationAction.h>
 #include <termios.h>
-#include <fcntl.h>
 
-#define REPRINT_INTERVAL 5
-
-enum State
-{
-  MOVE,
-  TURN,
-  STOP
-};
+typedef actionlib::SimpleActionClient<line_rot_slam::OptimizationAction> Client;
 
 class TwistKeyboardControl
 {
 private:
   ros::NodeHandle nh_;
   ros::NodeHandle pnh_;
-  ros::Subscriber optimization_end_flag_sub_;
-  ros::Publisher optimization_start_flag_pub_;
   ros::Publisher twist_pub_;
-  enum State previous_state_;
-  enum State current_state_;
+  ros::Timer timer_;
+  geometry_msgs::Twist twist_;
+  line_rot_slam::OptimizationGoal goal_;
   float linear_velocity_;
   float angular_velocity_;
+  boost::shared_ptr<Client> client_;
 
 public:
   TwistKeyboardControl();
-  void optimizationEndCallback(const std_msgs::Bool& flag_msg);
+  void twistTimerCallback(const ros::TimerEvent& event);
   void controlLoop();
   void displayInstructions();
   int getch();

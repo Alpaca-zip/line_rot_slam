@@ -21,110 +21,63 @@ TwistKeyboardControl::TwistKeyboardControl() : pnh_("~")
   pnh_.param<float>("linear_velocity", linear_velocity_, 0.5);
   pnh_.param<float>("angular_velocity", angular_velocity_, 0.5);
 
-  optimization_end_flag_sub_ =
-      nh_.subscribe("optimization_end_flag", 10, &TwistKeyboardControl::optimizationEndCallback, this);
-  optimization_start_flag_pub_ = nh_.advertise<std_msgs::Bool>("optimization_start_flag", 10);
   twist_pub_ = nh_.advertise<geometry_msgs::Twist>("cmd_vel", 10);
-  previous_state_ = State::STOP;
-  current_state_ = State::MOVE;
+  timer_ = nh_.createTimer(ros::Duration(0.1), &TwistKeyboardControl::twistTimerCallback, this);
+
+  client_.reset(new Client("optimization", true));
+  goal_.state = "STOP";
 
   displayInstructions();
-  std::cout << "\033[32m **START MOVING**\033[0m" << std::endl;
 }
 
-void TwistKeyboardControl::optimizationEndCallback(const std_msgs::Bool& flag_msg)
+void TwistKeyboardControl::twistTimerCallback(const ros::TimerEvent& event)
 {
-  if (!flag_msg.data)
-  {
-    return;
-  }
-  else if (previous_state_ == State::MOVE)
-  {
-    previous_state_ = current_state_;
-    current_state_ = State::TURN;
-    std::cout << "\033[32m **START TURNING**\033[0m" << std::endl;
-  }
-  else if (previous_state_ == State::TURN)
-  {
-    previous_state_ = current_state_;
-    current_state_ = State::MOVE;
-    std::cout << "\033[32m **START MOVING**\033[0m" << std::endl;
-  }
+  twist_pub_.publish(twist_);
 }
 
 void TwistKeyboardControl::controlLoop()
 {
-  std_msgs::Bool msg;
-  geometry_msgs::Twist twist;
+  if (!client_->waitForServer(ros::Duration(1.0)))
+  {
+    ROS_INFO("Waiting for the optimization action server...");
+    return;
+  }
 
   int c = getch();
 
-  if (current_state_ == State::STOP)
+  if (c == 'w' && goal_.state == "STOP")
   {
-    msg.data = false;
+    std::cout << "\033[33m **MOVE FORWARD**\033[0m" << std::endl;
+    twist_.linear.x = linear_velocity_;
+    goal_.state = "MOVE";
   }
-  else if (current_state_ == State::MOVE)
+  else if (c == 's' && goal_.state == "STOP")
   {
-    if (c == -1 && previous_state_ == State::STOP)
-    {
-      msg.data = false;
-    }
-    else if (c == 'w' && previous_state_ == State::STOP)
-    {
-      std::cout << "\033[32m **MOVE FORWARD**\033[0m" << std::endl;
-      twist.linear.x = linear_velocity_;
-      twist_pub_.publish(twist);
-      previous_state_ = current_state_;
-      msg.data = false;
-    }
-    else if (c == 's' && previous_state_ == State::STOP)
-    {
-      std::cout << "\033[32m **MOVE BACKWARD**\033[0m" << std::endl;
-      twist.linear.x = -linear_velocity_;
-      twist_pub_.publish(twist);
-      previous_state_ = current_state_;
-      msg.data = false;
-    }
-    else if (c == ' ' && previous_state_ != State::STOP)
-    {
-      std::cout << "\033[32m **STOP MOVING**\033[0m" << std::endl;
-      twist_pub_.publish(twist);
-      current_state_ = State::STOP;
-      msg.data = true;
-    }
+    std::cout << "\033[33m **MOVE BACKWARD**\033[0m" << std::endl;
+    twist_.linear.x = -linear_velocity_;
+    goal_.state = "MOVE";
   }
-  else if (current_state_ == State::TURN)
+  else if (c == 'a' && goal_.state == "STOP")
   {
-    if (c == -1 && previous_state_ == State::STOP)
-    {
-      msg.data = false;
-    }
-    else if (c == 'a' && previous_state_ == State::STOP)
-    {
-      std::cout << "\033[32m **TURN LEFT**\033[0m" << std::endl;
-      twist.angular.z = angular_velocity_;
-      twist_pub_.publish(twist);
-      previous_state_ = current_state_;
-      msg.data = false;
-    }
-    else if (c == 'd' && previous_state_ == State::STOP)
-    {
-      std::cout << "\033[32m **TURN RIGHT**\033[0m" << std::endl;
-      twist.angular.z = -angular_velocity_;
-      twist_pub_.publish(twist);
-      previous_state_ = current_state_;
-      msg.data = false;
-    }
-    else if (c == ' ' && previous_state_ != State::STOP)
-    {
-      std::cout << "\033[32m **STOP TURNING**\033[0m" << std::endl;
-      twist_pub_.publish(twist);
-      current_state_ = State::STOP;
-      msg.data = true;
-    }
+    std::cout << "\033[33m **TURN LEFT**\033[0m" << std::endl;
+    twist_.angular.z = angular_velocity_;
+    goal_.state = "TURN";
   }
-
-  optimization_start_flag_pub_.publish(msg);
+  else if (c == 'd' && goal_.state == "STOP")
+  {
+    std::cout << "\033[33m **TURN RIGHT**\033[0m" << std::endl;
+    twist_.angular.z = -angular_velocity_;
+    goal_.state = "TURN";
+  }
+  else if (c == ' ' && goal_.state != "STOP")
+  {
+    std::cout << "\033[31m **STOP**\033[0m" << std::endl;
+    twist_.linear.x = 0.0;
+    twist_.angular.z = 0.0;
+    client_->sendGoal(goal_);
+    client_->waitForResult(ros::Duration(10.0));
+    goal_.state = "STOP";
+  }
 }
 
 void TwistKeyboardControl::displayInstructions()
@@ -149,26 +102,15 @@ int TwistKeyboardControl::getch()
 {
   static struct termios oldt, newt;
   int ch;
-  int oldf;
 
   tcgetattr(STDIN_FILENO, &oldt);
   newt = oldt;
-  newt.c_lflag &= ~(ICANON | ECHO);
+  newt.c_lflag &= ~(ICANON);
   tcsetattr(STDIN_FILENO, TCSANOW, &newt);
-  oldf = fcntl(STDIN_FILENO, F_GETFL, 0);
-  fcntl(STDIN_FILENO, F_SETFL, oldf | O_NONBLOCK);
-
   ch = getchar();
-
   tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
-  fcntl(STDIN_FILENO, F_SETFL, oldf);
 
-  if (ch != EOF)
-  {
-    return ch;
-  }
-
-  return -1;
+  return ch;
 }
 
 int main(int argc, char** argv)
