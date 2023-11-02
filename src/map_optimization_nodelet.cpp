@@ -23,6 +23,7 @@ void MapOptimizationNodelet::onInit()
   pnh_ = getPrivateNodeHandle();
   pnh_.param<std::string>("input_points_topic", points_in_, "points_in");
   pnh_.param<std::string>("odom_frame", odom_frame_, "odom");
+  pnh_.param<std::string>("map_frame", map_frame_, "map");
 
   pointcloud_sub_ = nh_.subscribe(points_in_, 1, &MapOptimizationNodelet::pointcloudCallback, this);
   timer_ = nh_.createTimer(ros::Duration(0.1), &MapOptimizationNodelet::broadcastMapFrame, this);
@@ -42,7 +43,7 @@ void MapOptimizationNodelet::broadcastMapFrame(const ros::TimerEvent&)
   geometry_msgs::TransformStamped transformStamped;
 
   transformStamped.header.stamp = ros::Time::now();
-  transformStamped.header.frame_id = "map";
+  transformStamped.header.frame_id = map_frame_;
   transformStamped.child_frame_id = odom_frame_;
 
   // TODO: get transform from optimization result
@@ -147,7 +148,7 @@ void MapOptimizationNodelet::publishMapCloud()
   }
 
   pcl::toROSMsg(*map_cloud, *transformed_cloud_msg);
-  transformed_cloud_msg->header.frame_id = "map";
+  transformed_cloud_msg->header.frame_id = map_frame_;
   transformed_cloud_msg->header.stamp = ros::Time::now();
 
   map_pub_.publish(transformed_cloud_msg);

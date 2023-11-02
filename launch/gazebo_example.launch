@@ -17,6 +17,7 @@
   <arg name="hfov" default="360.0"/>
 
   <arg name="odom_frame" default="odom"/>
+  <arg name="map_frame" default="map"/>
 
   <include file="$(find line_rot_slam)/launch/include/example_world.launch">
     <arg name="model" value="$(arg model)"/>
@@ -41,6 +42,7 @@
     <arg name="manager_name" default="optimization_nodelet_manager"/>
     <arg name="input_points_topic" value="$(arg output_points_topic)"/>
     <arg name="odom_frame" value="$(arg odom_frame)"/>
+    <arg name="map_frame" value="$(arg map_frame)"/>
   </include>
 
   <node pkg="line_rot_slam" type="twist_keyboard_control_node" name="twist_keyboard_control_node" output="screen" launch-prefix="xterm -e">

@@ -44,6 +44,7 @@ private:
   ros::Timer timer_;
   std::string points_in_;
   std::string odom_frame_;
+  std::string map_frame_;
   std::vector<pcl::PointCloud<pcl::PointXYZI>::Ptr> cloud_vector_;
   std::vector<pcl::PointCloud<pcl::PointXYZI>::Ptr> transformed_cloud_vector_;
   std::vector<Eigen::Affine3d> transform_vector_;
