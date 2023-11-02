@@ -20,6 +20,7 @@
   <arg name="map_frame" default="map"/>
   <arg name="translation_threshold" default="0.1"/>
   <arg name="rotation_threshold" default="0.1"/>
+  <arg name="voxel_grid_leaf_size" default="0.1"/>
 
   <include file="$(find line_rot_slam)/launch/include/example_world.launch">
     <arg name="model" value="$(arg model)"/>
@@ -47,6 +48,7 @@
     <arg name="map_frame" value="$(arg map_frame)"/>
     <arg name="translation_threshold" value="$(arg translation_threshold)"/>
     <arg name="rotation_threshold" value="$(arg rotation_threshold)"/>
+    <arg name="voxel_grid_leaf_size" value="$(arg voxel_grid_leaf_size)"/>
   </include>
 
   <node pkg="line_rot_slam" type="twist_keyboard_control_node" name="twist_keyboard_control_node" output="screen" launch-prefix="xterm -e">

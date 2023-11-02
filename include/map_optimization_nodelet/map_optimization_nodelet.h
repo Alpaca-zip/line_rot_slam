@@ -26,6 +26,7 @@
 #include <line_rot_slam/OptimizationAction.h>
 #include <pcl_ros/point_cloud.h>
 #include <pcl/common/transforms.h>
+#include <pcl/filters/voxel_grid.h>
 #include <tf2_eigen/tf2_eigen.h>
 #include <tf2_ros/transform_listener.h>
 #include <tf2_ros/transform_broadcaster.h>
@@ -57,6 +58,7 @@ private:
   bool optimization_flag_;
   double translation_threshold_;
   double rotation_threshold_;
+  double leaf_size_;
 
 public:
   virtual void onInit();

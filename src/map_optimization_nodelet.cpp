@@ -26,6 +26,7 @@ void MapOptimizationNodelet::onInit()
   pnh_.param<std::string>("map_frame", map_frame_, "map");
   pnh_.param<double>("translation_threshold", translation_threshold_, 0.1);
   pnh_.param<double>("rotation_threshold", rotation_threshold_, 0.1);
+  pnh_.param<double>("voxel_grid_leaf_size", leaf_size_, 0.1);
 
   pointcloud_sub_ = nh_.subscribe(points_in_, 1, &MapOptimizationNodelet::pointcloudCallback, this);
   timer_ = nh_.createTimer(ros::Duration(0.1), &MapOptimizationNodelet::broadcastMapFrame, this);
@@ -136,18 +137,24 @@ void MapOptimizationNodelet::transformCloud()
 
 void MapOptimizationNodelet::publishMapCloud()
 {
-  sensor_msgs::PointCloud2Ptr transformed_cloud_msg(new sensor_msgs::PointCloud2);
+  sensor_msgs::PointCloud2Ptr map_cloud_msg(new sensor_msgs::PointCloud2);
+  pcl::PointCloud<pcl::PointXYZI>::Ptr downsampled_cloud(new pcl::PointCloud<pcl::PointXYZI>);
 
   for (const pcl::PointCloud<pcl::PointXYZI>::Ptr& cloud : transformed_cloud_vector_)
   {
     *map_cloud_ += *cloud;
   }
 
-  pcl::toROSMsg(*map_cloud_, *transformed_cloud_msg);
-  transformed_cloud_msg->header.frame_id = map_frame_;
-  transformed_cloud_msg->header.stamp = ros::Time::now();
+  pcl::VoxelGrid<pcl::PointXYZI> voxel_grid;
+  voxel_grid.setInputCloud(map_cloud_);
+  voxel_grid.setLeafSize(leaf_size_, leaf_size_, leaf_size_);
+  voxel_grid.filter(*downsampled_cloud);
 
-  map_pub_.publish(transformed_cloud_msg);
+  pcl::toROSMsg(*map_cloud_, *map_cloud_msg);
+  map_cloud_msg->header.frame_id = map_frame_;
+  map_cloud_msg->header.stamp = ros::Time::now();
+
+  map_pub_.publish(map_cloud_msg);
 }
 
 bool MapOptimizationNodelet::getTransform(const std::string& target_frame, const std::string& source_frame,
