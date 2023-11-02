@@ -84,7 +84,7 @@ void MapOptimizationNodelet::pointcloudCallback(const sensor_msgs::PointCloud2Co
     }
     else
     {
-      ROS_WARN("No transform available from %s to %s", cloud_msg->header.frame_id.c_str(), odom_frame_.c_str());
+      ROS_DEBUG("No transform available from %s to %s", cloud_msg->header.frame_id.c_str(), odom_frame_.c_str());
     }
   }
 }
@@ -170,7 +170,7 @@ bool MapOptimizationNodelet::getTransform(const std::string& target_frame, const
   }
   catch (tf2::TransformException& ex)
   {
-    ROS_WARN("Transform error: %s", ex.what());
+    ROS_DEBUG("Transform error: %s", ex.what());
     return false;
   }
 }
