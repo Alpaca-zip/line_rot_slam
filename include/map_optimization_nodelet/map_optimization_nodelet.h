@@ -49,11 +49,14 @@ private:
   std::vector<pcl::PointCloud<pcl::PointXYZI>::Ptr> transformed_cloud_vector_;
   std::vector<Eigen::Affine3d> transform_vector_;
   Eigen::Affine3d prev_transform_;
+  pcl::PointCloud<pcl::PointXYZI>::Ptr map_cloud_;
   boost::shared_ptr<tf2_ros::Buffer> tf_buffer_;
   boost::shared_ptr<tf2_ros::TransformListener> tf_listener_;
   boost::shared_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
   boost::shared_ptr<Server> server_;
   bool optimization_flag_;
+  double translation_threshold_;
+  double rotation_threshold_;
 
 public:
   virtual void onInit();
@@ -62,6 +65,9 @@ public:
   void execute(const line_rot_slam::OptimizationGoalConstPtr& goal);
   void transformCloud();
   void publishMapCloud();
+  bool getTransform(const std::string& target_frame, const std::string& source_frame, const ros::Time& time,
+                    Eigen::Affine3d& transform);
+  bool shouldPushBackCloud(const Eigen::Affine3d& current_transform);
 };
 
 }  // namespace OPTIMIZATION
