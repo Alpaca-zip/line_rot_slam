@@ -30,9 +30,11 @@ void MapOptimizationNodelet::onInit()
 
   pointcloud_sub_ = nh_.subscribe(points_in_, 1, &MapOptimizationNodelet::pointcloudCallback, this);
   timer_ = nh_.createTimer(ros::Duration(0.1), &MapOptimizationNodelet::broadcastMapFrame, this);
+  marker_pub_ = nh_.advertise<visualization_msgs::MarkerArray>("optimization_marker", 1);
   map_pub_ = nh_.advertise<sensor_msgs::PointCloud2>("map", 1);
   prev_transform_ = Eigen::Affine3d::Identity();
   optimization_flag_ = false;
+  marker_id_ = 0;
 
   map_cloud_.reset(new pcl::PointCloud<pcl::PointXYZI>);
   tf_buffer_.reset(new tf2_ros::Buffer(ros::Duration(2.0), true));
@@ -108,6 +110,11 @@ void MapOptimizationNodelet::execute(const line_rot_slam::OptimizationGoalConstP
   }
   */
 
+  if (goal->state == "MOVE")
+  {
+    publishMarkerArray();
+  }
+
   publishMapCloud();
 
   result.success = true;
@@ -133,6 +140,68 @@ void MapOptimizationNodelet::transformCloud()
     pcl::transformPointCloud(*cloud, *transformed_cloud, transform_vector_[i]);
     transformed_cloud_vector_.push_back(transformed_cloud);
   }
+}
+
+void MapOptimizationNodelet::publishMarkerArray()
+{
+  visualization_msgs::MarkerArray marker_array;
+  visualization_msgs::Marker cube;
+
+  cube.header.frame_id = map_frame_;
+  cube.header.stamp = ros::Time::now();
+  cube.ns = "cube";
+  cube.id = marker_id_++;
+  cube.type = visualization_msgs::Marker::CUBE;
+  cube.action = visualization_msgs::Marker::ADD;
+  cube.scale.x = 0.05;
+  cube.scale.y = 0.05;
+  cube.scale.z = 0.05;
+  cube.color.r = 0.0;
+  cube.color.g = 1.0;
+  cube.color.b = 0.0;
+  cube.color.a = 1.0;
+  cube.pose.orientation.w = 1.0;
+
+  visualization_msgs::Marker line_strip;
+  line_strip.header.frame_id = map_frame_;
+  line_strip.header.stamp = ros::Time::now();
+  line_strip.ns = "line_strip";
+  line_strip.id = 0;
+  line_strip.type = visualization_msgs::Marker::LINE_STRIP;
+  line_strip.action = visualization_msgs::Marker::ADD;
+  line_strip.scale.x = 0.01;
+  line_strip.color.r = 1.0;
+  line_strip.color.g = 0.0;
+  line_strip.color.b = 0.0;
+  line_strip.color.a = 1.0;
+  line_strip.pose.orientation.w = 1.0;
+
+  if (!transform_vector_.empty())
+  {
+    Eigen::Vector3d translation = transform_vector_.back().translation();
+    geometry_msgs::Point point;
+    point.x = translation.x();
+    point.y = translation.y();
+    point.z = translation.z();
+
+    cube.pose.position = point;
+    marker_array.markers.push_back(cube);
+
+    for (const geometry_msgs::Point& old_point : old_marker_points_)
+    {
+      line_strip.points.push_back(old_point);
+    }
+
+    line_strip.points.push_back(point);
+    old_marker_points_.push_back(point);
+  }
+
+  if (line_strip.points.size() >= 2)
+  {
+    marker_array.markers.push_back(line_strip);
+  }
+
+  marker_pub_.publish(marker_array);
 }
 
 void MapOptimizationNodelet::publishMapCloud()
@@ -186,6 +255,8 @@ bool MapOptimizationNodelet::shouldPushBackCloud(const Eigen::Affine3d& current_
 
   euler_angle = incremental_transform.rotation().eulerAngles(0, 1, 2);
   rotation_angle = std::abs(euler_angle[2]);
+
+  translation_distance = incremental_transform.translation().norm();
 
   return translation_distance >= translation_threshold_ || rotation_angle >= rotation_threshold_;
 }

@@ -22,6 +22,8 @@
 #include <std_msgs/Bool.h>
 #include <sensor_msgs/PointCloud2.h>
 #include <nav_msgs/Odometry.h>
+#include <geometry_msgs/Point.h>
+#include <visualization_msgs/MarkerArray.h>
 #include <actionlib/server/simple_action_server.h>
 #include <line_rot_slam/OptimizationAction.h>
 #include <pcl_ros/point_cloud.h>
@@ -41,6 +43,7 @@ private:
   ros::NodeHandle nh_;
   ros::NodeHandle pnh_;
   ros::Subscriber pointcloud_sub_;
+  ros::Publisher marker_pub_;
   ros::Publisher map_pub_;
   ros::Timer timer_;
   std::string points_in_;
@@ -48,6 +51,7 @@ private:
   std::string map_frame_;
   std::vector<pcl::PointCloud<pcl::PointXYZI>::Ptr> cloud_vector_;
   std::vector<pcl::PointCloud<pcl::PointXYZI>::Ptr> transformed_cloud_vector_;
+  std::vector<geometry_msgs::Point> old_marker_points_;
   std::vector<Eigen::Affine3d> transform_vector_;
   Eigen::Affine3d prev_transform_;
   pcl::PointCloud<pcl::PointXYZI>::Ptr map_cloud_;
@@ -56,6 +60,7 @@ private:
   boost::shared_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
   boost::shared_ptr<Server> server_;
   bool optimization_flag_;
+  int marker_id_;
   double translation_threshold_;
   double rotation_threshold_;
   double leaf_size_;
@@ -66,6 +71,7 @@ public:
   void pointcloudCallback(const sensor_msgs::PointCloud2ConstPtr& cloud_msg);
   void execute(const line_rot_slam::OptimizationGoalConstPtr& goal);
   void transformCloud();
+  void publishMarkerArray();
   void publishMapCloud();
   bool getTransform(const std::string& target_frame, const std::string& source_frame, const ros::Time& time,
                     Eigen::Affine3d& transform);

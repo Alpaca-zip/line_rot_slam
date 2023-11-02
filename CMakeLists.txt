@@ -10,6 +10,7 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   geometry_msgs
   sensor_msgs
+  visualization_msgs
   actionlib
   actionlib_msgs
   cv_bridge
@@ -37,6 +38,7 @@ catkin_package(
     std_msgs
     geometry_msgs
     sensor_msgs
+    visualization_msgs
     actionlib
     actionlib_msgs
     cv_bridge
