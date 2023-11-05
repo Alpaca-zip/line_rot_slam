@@ -72,7 +72,7 @@
       <odometryFrame>odom</odometryFrame>
       <odometrySource>world</odometrySource>
       <publishTf>true</publishTf>
-      <publishOdomTF>true</publishOdomTF>
+      <publishOdomTF>false</publishOdomTF>
       <publishWheelTF>false</publishWheelTF>
       <publishOdom>true</publishOdom>
       <publishWheelJointState>true</publishWheelJointState>

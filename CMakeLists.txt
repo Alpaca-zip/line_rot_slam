@@ -11,6 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
   sensor_msgs
   visualization_msgs
+  nav_msgs
   actionlib
   actionlib_msgs
   cv_bridge
@@ -39,6 +40,7 @@ catkin_package(
     geometry_msgs
     sensor_msgs
     visualization_msgs
+    nav_msgs
     actionlib
     actionlib_msgs
     cv_bridge
@@ -65,5 +67,8 @@ target_link_libraries(${PROJECT_NAME}
 
 add_executable(twist_keyboard_control_node src/twist_keyboard_control.cpp)
 target_link_libraries(twist_keyboard_control_node ${catkin_LIBRARIES})
+
+add_executable(noisy_odom_publisher_node src/noisy_odom_publisher.cpp)
+target_link_libraries(noisy_odom_publisher_node ${catkin_LIBRARIES})
 
 install(TARGETS twist_keyboard_control_node RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
