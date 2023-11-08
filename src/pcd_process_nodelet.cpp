@@ -71,7 +71,10 @@ sensor_msgs::ImagePtr PcdProcessNodelet::createImageMsg(const sensor_msgs::Point
   cv_image.encoding = sensor_msgs::image_encodings::BGR8;
   std::vector<cv::Mat> channels;
   cv::split(cloud_mat, channels);
-  cv_image.image = convertToColorMap(channels[channel]);
+
+  cv::Mat flipped_channel;
+  cv::flip(channels[channel], flipped_channel, 1);
+  cv_image.image = convertToColorMap(flipped_channel);
 
   return cv_image.toImageMsg();
 }
