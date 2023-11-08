@@ -12,6 +12,8 @@ find_package(catkin REQUIRED COMPONENTS
   sensor_msgs
   visualization_msgs
   nav_msgs
+  message_generation
+  message_runtime
   actionlib
   actionlib_msgs
   cv_bridge
@@ -41,6 +43,8 @@ catkin_package(
     sensor_msgs
     visualization_msgs
     nav_msgs
+    message_generation
+    message_runtime
     actionlib
     actionlib_msgs
     cv_bridge
@@ -72,3 +76,5 @@ add_executable(noisy_odom_publisher_node src/noisy_odom_publisher.cpp)
 target_link_libraries(noisy_odom_publisher_node ${catkin_LIBRARIES})
 
 install(TARGETS twist_keyboard_control_node RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+install(TARGETS noisy_odom_publisher_node RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+install(FILES nodelet_plugins.xml DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
