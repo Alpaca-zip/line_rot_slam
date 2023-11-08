@@ -105,7 +105,7 @@ void MapOptimizationNodelet::execute(const line_rot_slam::OptimizationGoalConstP
 
   if (goal->state == "MOVE")
   {
-    //moveOptimization();
+    // moveOptimization();
     publishMarkerArray();
   }
 
@@ -240,7 +240,8 @@ bool MapOptimizationNodelet::getTransform(const std::string& target_frame, const
   }
 }
 
-bool MapOptimizationNodelet::shouldPushBackCloud(const Eigen::Affine3d& current_transform, Eigen::Affine3d& incremental_transform)
+bool MapOptimizationNodelet::shouldPushBackCloud(const Eigen::Affine3d& current_transform,
+                                                 Eigen::Affine3d& incremental_transform)
 {
   incremental_transform = prev_transform_.inverse() * current_transform;
   Eigen::Vector3d euler_angle = incremental_transform.rotation().eulerAngles(0, 1, 2);
