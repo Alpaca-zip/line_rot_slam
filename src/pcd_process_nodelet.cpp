@@ -140,8 +140,8 @@ cv::Mat PcdProcessNodelet::cloudToMat(const pcl::PointCloud<pcl::PointXYZI>::Ptr
     int last_row_idx = mat_row - 1;
     int last_col_idx = mat_col - 1;
     float azimuth = std::atan2(point.y, point.x);
-    float elevation = std::atan2(point.z, std::sqrt(std::pow(point.x, 2) + std::pow(point.y, 2)));
-    float radius = std::sqrt(std::pow(point.x, 2) + std::pow(point.y, 2) + std::pow(point.z, 2));
+    float elevation = std::atan2(point.z, std::hypot(point.x, point.y));
+    float radius = std::hypot(point.x, point.y, point.z);
 
     int calculated_row_idx = int(
         std::min(std::max(std::round(static_cast<float>(mat_row) * (1 - (radToDeg(elevation) + (vfov / 2.0f)) / vfov)),
