@@ -54,6 +54,7 @@ private:
   std::vector<geometry_msgs::Point> old_marker_points_;
   std::vector<Eigen::Affine3d> transform_vector_;
   Eigen::Affine3d prev_transform_;
+  Eigen::Affine3d prev_optimization_transform_;
   pcl::PointCloud<pcl::PointXYZI>::Ptr map_cloud_;
   boost::shared_ptr<tf2_ros::Buffer> tf_buffer_;
   boost::shared_ptr<tf2_ros::TransformListener> tf_listener_;
@@ -75,7 +76,7 @@ public:
   void publishMapCloud();
   bool getTransform(const std::string& target_frame, const std::string& source_frame, const ros::Time& time,
                     Eigen::Affine3d& transform);
-  bool shouldPushBackCloud(const Eigen::Affine3d& current_transform);
+  bool shouldPushBackCloud(const Eigen::Affine3d& current_transform, Eigen::Affine3d& incremental_transform);
 };
 
 }  // namespace OPTIMIZATION

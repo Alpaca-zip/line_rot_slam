@@ -33,6 +33,7 @@ void MapOptimizationNodelet::onInit()
   marker_pub_ = nh_.advertise<visualization_msgs::MarkerArray>("optimization_marker", 1);
   map_pub_ = nh_.advertise<sensor_msgs::PointCloud2>("map", 1);
   prev_transform_ = Eigen::Affine3d::Identity();
+  prev_optimization_transform_ = Eigen::Affine3d::Identity();
   optimization_flag_ = false;
   marker_id_ = 0;
 
@@ -70,16 +71,19 @@ void MapOptimizationNodelet::pointcloudCallback(const sensor_msgs::PointCloud2Co
   if (!optimization_flag_)
   {
     Eigen::Affine3d current_transform;
+    Eigen::Affine3d incremental_transform;
 
     if (getTransform(odom_frame_, cloud_msg->header.frame_id, cloud_msg->header.stamp, current_transform))
     {
-      if (shouldPushBackCloud(current_transform))
+      if (shouldPushBackCloud(current_transform, incremental_transform))
       {
         pcl::PointCloud<pcl::PointXYZI>::Ptr pcl_cloud(new pcl::PointCloud<pcl::PointXYZI>);
 
         pcl::fromROSMsg(*cloud_msg, *pcl_cloud);
         cloud_vector_.push_back(pcl_cloud);
-        transform_vector_.push_back(current_transform);
+
+        prev_optimization_transform_ = prev_optimization_transform_ * incremental_transform;
+        transform_vector_.push_back(prev_optimization_transform_);
 
         prev_transform_ = current_transform;
       }
@@ -99,26 +103,26 @@ void MapOptimizationNodelet::execute(const line_rot_slam::OptimizationGoalConstP
 
   transformCloud();
 
-  /* TODO
   if (goal->state == "MOVE")
   {
-    moveOptimization();
+    //moveOptimization();
+    publishMarkerArray();
   }
-  else (goal->state == "TURN")
+
+  /*
+  if (goal->state == "TURN")
   {
     turnOptimization();
   }
   */
 
-  if (goal->state == "MOVE")
-  {
-    publishMarkerArray();
-  }
-
   publishMapCloud();
 
   result.success = true;
   server_->setSucceeded(result);
+
+  prev_optimization_transform_ = transform_vector_.back();
+
   cloud_vector_.clear();
   transformed_cloud_vector_.clear();
   transform_vector_.clear();
@@ -128,15 +132,10 @@ void MapOptimizationNodelet::execute(const line_rot_slam::OptimizationGoalConstP
 
 void MapOptimizationNodelet::transformCloud()
 {
-  geometry_msgs::TransformStamped transform_stamped;
-  Eigen::Affine3d current_transform;
-  Eigen::Affine3d incremental_transform;
-
   for (int i = 0; i < cloud_vector_.size(); i++)
   {
     pcl::PointCloud<pcl::PointXYZI>::Ptr cloud = cloud_vector_[i];
     pcl::PointCloud<pcl::PointXYZI>::Ptr transformed_cloud(new pcl::PointCloud<pcl::PointXYZI>);
-
     pcl::transformPointCloud(*cloud, *transformed_cloud, transform_vector_[i]);
     transformed_cloud_vector_.push_back(transformed_cloud);
   }
@@ -206,19 +205,18 @@ void MapOptimizationNodelet::publishMarkerArray()
 
 void MapOptimizationNodelet::publishMapCloud()
 {
-  sensor_msgs::PointCloud2Ptr map_cloud_msg(new sensor_msgs::PointCloud2);
-  pcl::PointCloud<pcl::PointXYZI>::Ptr downsampled_cloud(new pcl::PointCloud<pcl::PointXYZI>);
-
   for (const pcl::PointCloud<pcl::PointXYZI>::Ptr& cloud : transformed_cloud_vector_)
   {
     *map_cloud_ += *cloud;
   }
 
+  pcl::PointCloud<pcl::PointXYZI>::Ptr downsampled_cloud(new pcl::PointCloud<pcl::PointXYZI>);
   pcl::VoxelGrid<pcl::PointXYZI> voxel_grid;
   voxel_grid.setInputCloud(map_cloud_);
   voxel_grid.setLeafSize(leaf_size_, leaf_size_, leaf_size_);
   voxel_grid.filter(*downsampled_cloud);
 
+  sensor_msgs::PointCloud2Ptr map_cloud_msg(new sensor_msgs::PointCloud2);
   pcl::toROSMsg(*map_cloud_, *map_cloud_msg);
   map_cloud_msg->header.frame_id = map_frame_;
   map_cloud_msg->header.stamp = ros::Time::now();
@@ -229,11 +227,9 @@ void MapOptimizationNodelet::publishMapCloud()
 bool MapOptimizationNodelet::getTransform(const std::string& target_frame, const std::string& source_frame,
                                           const ros::Time& time, Eigen::Affine3d& transform)
 {
-  geometry_msgs::TransformStamped transform_stamped;
-
   try
   {
-    transform_stamped = tf_buffer_->lookupTransform(target_frame, source_frame, time);
+    geometry_msgs::TransformStamped transform_stamped = tf_buffer_->lookupTransform(target_frame, source_frame, time);
     transform = tf2::transformToEigen(transform_stamped);
     return true;
   }
@@ -244,19 +240,12 @@ bool MapOptimizationNodelet::getTransform(const std::string& target_frame, const
   }
 }
 
-bool MapOptimizationNodelet::shouldPushBackCloud(const Eigen::Affine3d& current_transform)
+bool MapOptimizationNodelet::shouldPushBackCloud(const Eigen::Affine3d& current_transform, Eigen::Affine3d& incremental_transform)
 {
-  Eigen::Affine3d incremental_transform;
-  Eigen::Vector3d euler_angle;
-  double translation_distance;
-  double rotation_angle;
-
   incremental_transform = prev_transform_.inverse() * current_transform;
-
-  euler_angle = incremental_transform.rotation().eulerAngles(0, 1, 2);
-  rotation_angle = std::abs(euler_angle[2]);
-
-  translation_distance = incremental_transform.translation().norm();
+  Eigen::Vector3d euler_angle = incremental_transform.rotation().eulerAngles(0, 1, 2);
+  double rotation_angle = std::abs(euler_angle[2]);
+  double translation_distance = incremental_transform.translation().norm();
 
   return translation_distance >= translation_threshold_ || rotation_angle >= rotation_threshold_;
 }
