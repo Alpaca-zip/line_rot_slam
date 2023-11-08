@@ -31,11 +31,13 @@ add_action_files(
   Optimization.action
 )
 
+message(STATUS "Generating messages...")
 generate_messages(
   DEPENDENCIES
   actionlib_msgs
   std_msgs
 )
+message(STATUS "catkin_INCLUDE_DIRS after generate_messages: ${catkin_INCLUDE_DIRS}")
 
 catkin_package(
   CATKIN_DEPENDS
