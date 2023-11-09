@@ -31,13 +31,11 @@ add_action_files(
   Optimization.action
 )
 
-message(STATUS "Generating messages...")
 generate_messages(
   DEPENDENCIES
   actionlib_msgs
   std_msgs
 )
-message(STATUS "catkin_INCLUDE_DIRS after generate_messages: ${catkin_INCLUDE_DIRS}")
 
 catkin_package(
   CATKIN_DEPENDS
@@ -68,11 +66,11 @@ include_directories(
 )
 
 add_library(pcd_process_nodelet src/pcd_process_nodelet.cpp)
-add_dependencies(pcd_process_nodelet ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(pcd_process_nodelet ${PROJECT_NAME}_generate_messages_cpp)
 target_link_libraries(pcd_process_nodelet ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${OpenCV_LIBRARIES})
 
 add_library(map_optimization_nodelet src/map_optimization_nodelet.cpp)
-add_dependencies(map_optimization_nodelet ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(map_optimization_nodelet ${PROJECT_NAME}_generate_messages_cpp)
 target_link_libraries(map_optimization_nodelet ${catkin_LIBRARIES} ${PCL_LIBRARIES})
 
 add_executable(twist_keyboard_control_node src/twist_keyboard_control.cpp)
