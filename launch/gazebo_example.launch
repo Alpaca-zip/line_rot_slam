@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+  <arg name="model" default="$(find line_rot_slam)/xacro/robot.xacro"/>
+  <arg name="x_pos" default="0.0"/>
+  <arg name="y_pos" default="0.0"/>
+  <arg name="z_pos" default="0.0"/>
+
+  <arg name="use_nodelet" default="true"/>
+  <arg name="input_points_topic" default="/velodyne_points"/>
+  <arg name="output_points_topic" default="/processed_points"/>
+  <arg name="publish_image" default="true"/>
+  <arg name="resolution" default="1.0"/>
+  <arg name="vfov" default="30.0"/>
+  <arg name="hfov" default="360.0"/>
+
+  <arg name="odom_frame" default="odom"/>
+  <arg name="map_frame" default="map"/>
+  <arg name="translation_threshold" default="0.1"/>
+  <arg name="rotation_threshold" default="0.1"/>
+  <arg name="voxel_grid_leaf_size" default="0.1"/>
+
+  <arg name="publish_tf" default="true"/>
+  <arg name="translation_noise_factor" default="1.0"/>
+  <arg name="rotation_noise_factor" default="1.0"/>
+  <arg name="add_noise_translation_threshold" default="0.001"/>
+  <arg name="add_noise_rotation_threshold" default="0.001"/>
+
+  <arg name="linear_velocity" default="0.5"/>
+  <arg name="angular_velocity" default="0.5"/>
+
+  <include file="$(find line_rot_slam)/launch/include/example_world.launch">
+    <arg name="model" value="$(arg model)"/>
+    <arg name="x_pos" value="$(arg x_pos)"/>
+    <arg name="y_pos" value="$(arg y_pos)"/>
+    <arg name="z_pos" value="$(arg z_pos)"/>
+  </include>
+
+  <include file="$(find line_rot_slam)/launch/include/pcd_process_nodelet.launch">
+    <arg name="use_nodelet" value="$(arg use_nodelet)"/>
+    <arg name="manager_name" default="process_nodelet_manager"/>
+    <arg name="input_points_topic" value="$(arg input_points_topic)"/>
+    <arg name="output_points_topic" value="$(arg output_points_topic)"/>
+    <arg name="publish_image" value="$(arg publish_image)"/>
+    <arg name="resolution" value="$(arg resolution)"/>
+    <arg name="vfov" value="$(arg vfov)"/>
+    <arg name="hfov" value="$(arg hfov)"/>
+  </include>
+
+  <include file="$(find line_rot_slam)/launch/include/map_optimization_nodelet.launch">
+    <arg name="use_nodelet" value="$(arg use_nodelet)"/>
+    <arg name="manager_name" default="optimization_nodelet_manager"/>
+    <arg name="input_points_topic" value="$(arg output_points_topic)"/>
+    <arg name="odom_frame" value="$(arg odom_frame)"/>
+    <arg name="map_frame" value="$(arg map_frame)"/>
+    <arg name="translation_threshold" value="$(arg translation_threshold)"/>
+    <arg name="rotation_threshold" value="$(arg rotation_threshold)"/>
+    <arg name="voxel_grid_leaf_size" value="$(arg voxel_grid_leaf_size)"/>
+  </include>
+
+  <node pkg="line_rot_slam" type="noisy_odom_publisher_node" name="noisy_odom_publisher_node" output="screen">
+    <param name="publish_tf" value="$(arg publish_tf)"/>
+    <param name="translation_noise_factor" value="$(arg translation_noise_factor)"/>
+    <param name="rotation_noise_factor" value="$(arg rotation_noise_factor)"/>
+    <param name="translation_threshold" value="$(arg add_noise_translation_threshold)"/>
+    <param name="rotation_threshold" value="$(arg add_noise_rotation_threshold)"/>
+  </node>
+
+  <node pkg="line_rot_slam" type="twist_keyboard_control_node" name="twist_keyboard_control_node" output="screen" launch-prefix="xterm -e">
+    <param name="linear_velocity" value="$(arg linear_velocity)"/>
+    <param name="angular_velocity" value="$(arg angular_velocity)"/>
+  </node>
+
+  <node pkg="rviz" type="rviz" name="rviz" args="-d $(find line_rot_slam)/rviz/line_rot_slam.rviz"/>
+</launch>

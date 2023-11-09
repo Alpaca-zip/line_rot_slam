@@ -1,0 +1,6 @@
+# goal definition
+string state
+---
+# result definition
+bool success
+---
