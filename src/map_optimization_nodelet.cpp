@@ -45,25 +45,25 @@ void MapOptimizationNodelet::onInit()
   server_->start();
 }
 
-void MapOptimizationNodelet::broadcastMapFrame(const ros::TimerEvent&)
+void MapOptimizationNodelet::broadcastMapFrame(const ros::TimerEvent& event)
 {
-  geometry_msgs::TransformStamped transformStamped;
+  geometry_msgs::TransformStamped transform_stamped;
 
-  transformStamped.header.stamp = ros::Time::now();
-  transformStamped.header.frame_id = map_frame_;
-  transformStamped.child_frame_id = odom_frame_;
+  transform_stamped.header.stamp = ros::Time::now();
+  transform_stamped.header.frame_id = map_frame_;
+  transform_stamped.child_frame_id = odom_frame_;
 
   // TODO: get transform from optimization result
 
-  transformStamped.transform.translation.x = 0;
-  transformStamped.transform.translation.y = 0;
-  transformStamped.transform.translation.z = 0;
-  transformStamped.transform.rotation.x = 0;
-  transformStamped.transform.rotation.y = 0;
-  transformStamped.transform.rotation.z = 0;
-  transformStamped.transform.rotation.w = 1;
+  transform_stamped.transform.translation.x = 0;
+  transform_stamped.transform.translation.y = 0;
+  transform_stamped.transform.translation.z = 0;
+  transform_stamped.transform.rotation.x = 0;
+  transform_stamped.transform.rotation.y = 0;
+  transform_stamped.transform.rotation.z = 0;
+  transform_stamped.transform.rotation.w = 1;
 
-  tf_broadcaster_->sendTransform(transformStamped);
+  tf_broadcaster_->sendTransform(transform_stamped);
 }
 
 void MapOptimizationNodelet::pointcloudCallback(const sensor_msgs::PointCloud2ConstPtr& cloud_msg)

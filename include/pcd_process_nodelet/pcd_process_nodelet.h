@@ -53,7 +53,7 @@ private:
   float hfov_;
 
 public:
-  virtual void onInit();
+  void onInit() override;
   void pointcloudCallback(const sensor_msgs::PointCloud2ConstPtr& cloud_msg);
   sensor_msgs::ImagePtr createImageMsg(const sensor_msgs::PointCloud2ConstPtr& cloud_msg, const cv::Mat& cloud_mat,
                                        int channel);

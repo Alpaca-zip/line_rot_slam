@@ -67,8 +67,8 @@ private:
   double leaf_size_;
 
 public:
-  virtual void onInit();
-  void broadcastMapFrame(const ros::TimerEvent&);
+  void onInit() override;
+  void broadcastMapFrame(const ros::TimerEvent& event);
   void pointcloudCallback(const sensor_msgs::PointCloud2ConstPtr& cloud_msg);
   void execute(const line_rot_slam::OptimizationGoalConstPtr& goal);
   void transformCloud();
