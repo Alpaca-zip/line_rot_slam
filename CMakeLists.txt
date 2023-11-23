@@ -65,13 +65,13 @@ include_directories(
   ${PCL_INCLUDE_DIRS}
 )
 
-add_library(pcd_process_nodelet src/pcd_process_nodelet.cpp)
-add_dependencies(pcd_process_nodelet ${PROJECT_NAME}_generate_messages_cpp)
-target_link_libraries(pcd_process_nodelet ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${OpenCV_LIBRARIES})
+add_library(${PROJECT_NAME}
+  src/map_optimization_nodelet.cpp
+  src/pcd_process_nodelet.cpp
+)
 
-add_library(map_optimization_nodelet src/map_optimization_nodelet.cpp)
-add_dependencies(map_optimization_nodelet ${PROJECT_NAME}_generate_messages_cpp)
-target_link_libraries(map_optimization_nodelet ${catkin_LIBRARIES} ${PCL_LIBRARIES})
+add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}_generate_messages_cpp)
+target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${OpenCV_LIBRARIES})
 
 add_executable(twist_keyboard_control_node src/twist_keyboard_control.cpp)
 target_link_libraries(twist_keyboard_control_node ${catkin_LIBRARIES})
