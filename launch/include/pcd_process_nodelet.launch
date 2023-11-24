@@ -8,6 +8,8 @@
   <arg name="resolution" default="1.0"/>
   <arg name="vfov" default="30.0"/>
   <arg name="hfov" default="360.0"/>
+  <arg name="surface_threshold" default="0.1"/>
+  <arg name="corner_threshold" default="1.0"/>
 
   <group if="$(arg use_nodelet)">
     <node pkg="nodelet" type="nodelet" name="$(arg manager_name)" args="manager" output="screen"/>
@@ -19,6 +21,8 @@
       <param name="resolution" value="$(arg resolution)"/>
       <param name="vfov" value="$(arg vfov)"/>
       <param name="hfov" value="$(arg hfov)"/>
+      <param name="surface_threshold" value="$(arg surface_threshold)"/>
+      <param name="corner_threshold" value="$(arg corner_threshold)"/>
     </node>
   </group>
 
@@ -30,6 +34,8 @@
       <param name="resolution" value="$(arg resolution)"/>
       <param name="vfov" value="$(arg vfov)"/>
       <param name="hfov" value="$(arg hfov)"/>
+      <param name="surface_threshold" value="$(arg surface_threshold)"/>
+      <param name="corner_threshold" value="$(arg corner_threshold)"/>
     </node>
   </group>
 </launch>

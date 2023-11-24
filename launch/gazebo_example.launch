@@ -12,6 +12,8 @@
   <arg name="resolution" default="1.0"/>
   <arg name="vfov" default="30.0"/>
   <arg name="hfov" default="360.0"/>
+  <arg name="surface_threshold" default="0.1"/>
+  <arg name="corner_threshold" default="1.0"/>
 
   <arg name="odom_frame" default="odom"/>
   <arg name="map_frame" default="map"/>
@@ -44,6 +46,8 @@
     <arg name="resolution" value="$(arg resolution)"/>
     <arg name="vfov" value="$(arg vfov)"/>
     <arg name="hfov" value="$(arg hfov)"/>
+    <arg name="surface_threshold" value="$(arg surface_threshold)"/>
+    <arg name="corner_threshold" value="$(arg corner_threshold)"/>
   </include>
 
   <include file="$(find line_rot_slam)/launch/include/map_optimization_nodelet.launch">
