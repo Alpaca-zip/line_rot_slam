@@ -11,7 +11,7 @@
 
     <!-- example model -->
     <include>
-      <pose>9.0 9.0 0 0 0 3.142</pose>
+      <pose>-0.6 0.8 0 0 0 3.142</pose>
       <uri>model://example</uri>
       <name>example</name>
     </include>

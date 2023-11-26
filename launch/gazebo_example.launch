@@ -4,9 +4,13 @@
   <arg name="x_pos" default="0.0"/>
   <arg name="y_pos" default="0.0"/>
   <arg name="z_pos" default="0.0"/>
+  <arg name="roll" default="0.0"/>
+  <arg name="pitch" default="0.0"/>
+  <arg name="yaw" default="0.0"/> 
 
   <arg name="use_nodelet" default="true"/>
   <arg name="input_points_topic" default="/velodyne_points"/>
+  <arg name="input_feature_points_topic" default="/corner_points_out"/>
   <arg name="output_points_topic" default="/processed_points"/>
   <arg name="publish_image" default="true"/>
   <arg name="resolution" default="1.0"/>
@@ -35,6 +39,9 @@
     <arg name="x_pos" value="$(arg x_pos)"/>
     <arg name="y_pos" value="$(arg y_pos)"/>
     <arg name="z_pos" value="$(arg z_pos)"/>
+    <arg name="roll" value="$(arg roll)"/>
+    <arg name="pitch" value="$(arg pitch)"/>
+    <arg name="yaw" value="$(arg yaw)"/>
   </include>
 
   <include file="$(find line_rot_slam)/launch/include/pcd_process_nodelet.launch">
@@ -53,7 +60,8 @@
   <include file="$(find line_rot_slam)/launch/include/map_optimization_nodelet.launch">
     <arg name="use_nodelet" value="$(arg use_nodelet)"/>
     <arg name="manager_name" default="optimization_nodelet_manager"/>
-    <arg name="input_points_topic" value="$(arg output_points_topic)"/>
+    <arg name="input_points_topic" value="$(arg input_points_topic)"/>
+    <arg name="input_feature_points_topic" value="$(arg input_feature_points_topic)"/>
     <arg name="odom_frame" value="$(arg odom_frame)"/>
     <arg name="map_frame" value="$(arg map_frame)"/>
     <arg name="translation_threshold" value="$(arg translation_threshold)"/>
