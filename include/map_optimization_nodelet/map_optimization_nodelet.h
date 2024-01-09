@@ -55,14 +55,17 @@ private:
   std::string feature_points_in_;
   std::string odom_frame_;
   std::string map_frame_;
+  sensor_msgs::PointCloud2ConstPtr cloud_msg_;
+  sensor_msgs::PointCloud2ConstPtr feature_cloud_msg_;
   std::vector<pcl::PointCloud<pcl::PointXYZI>::Ptr> map_cloud_vector_;
   std::vector<pcl::PointCloud<pcl::PointXYZI>::Ptr> feature_cloud_vector_;
+  std::vector<pcl::PointCloud<pcl::PointXYZI>::Ptr> transformed_cloud_vector_;
   std::vector<geometry_msgs::Point> old_marker_points_;
-  std::vector<Eigen::Affine3d> transform_vector_;
-  Eigen::Affine3d prev_transform_;
-  Eigen::Affine3d prev_optimization_transform_;
+  std::vector<Eigen::Affine3f> transform_vector_;
+  Eigen::Affine3f prev_transform_;
+  Eigen::Affine3f prev_optimization_transform_;
   pcl::PointCloud<pcl::PointXYZI>::Ptr map_cloud_;
-  pcl::PointCloud<pcl::PointXYZI>::Ptr optimized_cloud_container_;
+  pcl::PointCloud<pcl::PointXYZI>::Ptr last_optimized_cloud_;
   pcl::KdTreeFLANN<pcl::PointXYZI>::Ptr kdtree_feature_cloud_;
   message_filters::Subscriber<sensor_msgs::PointCloud2> cloud_sub_;
   message_filters::Subscriber<sensor_msgs::PointCloud2> feature_cloud_sub_;
@@ -72,7 +75,9 @@ private:
   boost::shared_ptr<message_filters::Synchronizer<SyncPolicy>> sync_;
   boost::shared_ptr<Server> server_;
   bool optimization_flag_;
+  bool push_back_first_cloud_flag_;
   int marker_id_;
+  float last_angle_z_;
   double translation_threshold_;
   double rotation_threshold_;
   double leaf_size_;
@@ -82,27 +87,22 @@ public:
   void broadcastMapFrame(const ros::TimerEvent& event);
   void pointcloudCallback(const sensor_msgs::PointCloud2ConstPtr& cloud_msg,
                           const sensor_msgs::PointCloud2ConstPtr& feature_cloud_msg);
+  void pushBackTransformAndCloud();
+  void pushBackTransformAndCloud(const Eigen::Affine3f& incremental_transform);
   void execute(const line_rot_slam::OptimizationGoalConstPtr& goal);
   void moveOptimization();
   void turnOptimization();
-  void moveAndAppendCloud(const pcl::PointCloud<pcl::PointXYZI>::Ptr& input_cloud,
-                          const Eigen::Vector3d& transform_offset, pcl::PointCloud<pcl::PointXYZI>::Ptr& output_cloud);
-  void turnAndAppendCloud(const pcl::PointCloud<pcl::PointXYZI>::Ptr& input_cloud,
-                          const Eigen::Matrix3d& rotation_matrix, pcl::PointCloud<pcl::PointXYZI>::Ptr& output_cloud);
-  void moveOptimizeAndAppendCloud(const pcl::PointCloud<pcl::PointXYZI>::Ptr& input_cloud,
-                                  const Eigen::Vector3d& direction, const double& error);
-  void turnOptimizeAndAppendCloud(const pcl::PointCloud<pcl::PointXYZI>::Ptr& input_cloud, const double& error);
-  void moveOptimizationCore(const pcl::PointCloud<pcl::PointXYZI>::Ptr& map_cloud,
-                            const pcl::PointCloud<pcl::PointXYZI>::Ptr& current_cloud,
-                            const Eigen::Vector3d& optimize_direction, std::vector<double>& direction_error_vector);
-  void turnOptimizationCore(const pcl::PointCloud<pcl::PointXYZI>::Ptr& map_cloud,
-                            const pcl::PointCloud<pcl::PointXYZI>::Ptr& current_cloud,
-                            std::vector<double>& direction_error_vector);
+  void calculateTransMat(const pcl::PointCloud<pcl::PointXYZI>::Ptr& map_cloud,
+                         const pcl::PointCloud<pcl::PointXYZI>::Ptr& current_cloud, Eigen::Affine3f& transform_matrix);
+  void calculateRotMat(const pcl::PointCloud<pcl::PointXYZI>::Ptr& map_cloud,
+                       const pcl::PointCloud<pcl::PointXYZI>::Ptr& current_cloud, Eigen::Matrix3f& rotation_matrix);
   void publishMarkerArray();
+  void transformCloud();
   void publishMapCloud();
   bool getTransform(const std::string& target_frame, const std::string& source_frame, const ros::Time& time,
-                    Eigen::Affine3d& transform);
-  bool shouldPushBackCloud(const Eigen::Affine3d& current_transform, Eigen::Affine3d& incremental_transform);
+                    Eigen::Affine3f& transform);
+  bool shouldPushBackCloud(const Eigen::Affine3f& current_transform, Eigen::Affine3f& incremental_transform);
+  bool isRobotStopped();
   double calculateMedianError(std::vector<double>& direction_error_vector);
 };
 

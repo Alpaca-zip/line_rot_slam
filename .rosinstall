@@ -1,0 +1,4 @@
+- git:
+    local-name: cpr_gazebo
+    uri: https://github.com/clearpathrobotics/cpr_gazebo.git
+    version: noetic-devel

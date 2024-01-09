@@ -29,6 +29,7 @@
   <exec_depend>xterm</exec_depend>
   <export>
     <gazebo_ros gazebo_model_path="${prefix}/models"/>
+    <gazebo_ros gazebo_resource_path="${prefix}/worlds"/>
     <nodelet plugin="${prefix}/nodelet_plugins.xml"/>
   </export>
 </package>

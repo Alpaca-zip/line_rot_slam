@@ -74,6 +74,7 @@ void TwistKeyboardControl::controlLoop()
     std::cout << "\033[31m **STOP**\033[0m" << std::endl;
     twist_.linear.x = 0.0;
     twist_.angular.z = 0.0;
+    twist_pub_.publish(twist_);
     client_->sendGoal(goal_);
     client_->waitForResult(ros::Duration(10.0));
     goal_.state = "STOP";
